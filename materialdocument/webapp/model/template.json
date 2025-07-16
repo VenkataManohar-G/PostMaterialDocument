@@ -1,0 +1,18 @@
+{
+    "Template": [
+        {
+            "DocumentNo": "",
+            "PostingDate": "05-04-2025",
+            "GoodsMovementCode": "1",
+            "Material": "RM15",
+            "Plant": "1710",
+            "StorageLocation":"171C",
+            "GoodsMovementType":"101",
+            "PurchaseOrder":"4500000044",
+            "PurchaseOrderItem":"10",
+            "GoodsMovementRefDocType":"B",
+            "EntryUnit":"EA",
+            "QuantityInEntryUnit":"1"
+        }
+    ]
+}

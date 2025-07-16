@@ -1,0 +1,96 @@
+<mvc:View controllerName="materialdocument.controller.Upload_Material"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:u="sap.ui.unified"
+    xmlns:l="sap.ui.layout"
+    xmlns="sap.m">
+    <Page id="page" title="{i18n>title}">
+        <content>
+            <l:VerticalLayout id="id_vertical_layout">
+                <l:HorizontalLayout id="id_upload_layout">
+                    <Label id="id_label_for_upload" text="Upload Material Document" showColon="true" labelFor="fileUploader" ></Label>
+                    <u:FileUploader id="fileUploader" sameFilenameAllowed="true" iconOnly="false" buttonOnly="false" fileType="XLSX,xlsx"
+									icon="sap-icon://upload" iconFirst="true" style="Emphasized" change="onUpload"/>
+                </l:HorizontalLayout>
+                    <Table id="id_table"
+                        inset="false"
+                        mode="MultiSelect"
+                        enableBusyIndicator="true"
+                        sticky="ColumnHeaders,HeaderToolbar"
+                        growing="true"
+                        alternateRowColors="true"
+                        showNoData="true"
+                        items="{
+                                path: 'MaterialUpload>/'
+                            }"
+                        width="auto">
+                        <headerToolbar>
+                                <OverflowToolbar id="id_uploadoverflow1">
+                                    <Title id="id_uploadtitle" level="H2"/>
+                                        <ToolbarSpacer id="id_uploadtoolbar1"/>
+                                        <Button id="id_uploadpost" icon="sap-icon://excel-attachment" text="Post Material Document" type="Emphasized" press=".postMaterial" />
+                                        <Button id="id_uploaddownload" icon="sap-icon://excel-attachment" text="Download Template" press=".downloadButton" tooltip="Template Download"/>
+                                        <Button id="id_uploadvalidation" visible="false" type="Negative"  icon="sap-icon://validate" press=".downloadvalidationButton" tooltip="Download Validation Errors"/>    
+                                </OverflowToolbar>
+				        </headerToolbar>
+                        <columns>
+                            <Column id="id_uploadcolumn1" minScreenWidth="Tablet" demandPopin="true" width="5rem" >
+                                <Text id="id_upload_textc_1" text="Mat. Document" />
+                            </Column>
+                            <Column id="id_uploadcolumn2" minScreenWidth="Tablet" demandPopin="true" width="auto" >
+                                <Text id="id_upload_text_2" text="Posting Date" />
+                            </Column>
+                            <Column id="id_uploadcolumn3" minScreenWidth="Tablet" demandPopin="true" width="auto" >
+                                <Text id="id_upload_textc_3" text="Goods Movement" />
+                            </Column>
+                            <Column id="id_uploadcolumn9" minScreenWidth="Tablet" demandPopin="true" width="auto" >
+                                <Text id="id_upload_textc_9"  text="Material" />
+                            </Column>
+                            <Column id="id_uploadcolumn10" minScreenWidth="Tablet" demandPopin="true" width="auto" >
+                                <Text id="id_textc_10" text="Plant" />
+                            </Column>
+                            <Column id="id_uploadcolumn4" minScreenWidth="Tablet" demandPopin="true" width="auto" >
+                                <Text id="id_textc_4" text="Storage Location" />
+                            </Column>
+                            <Column id="id_uploadcolumn5" minScreenWidth="Tablet" demandPopin="true" width="auto" >
+                                <Text id="id_textc_5" text="Good Movement type" />
+                            </Column>
+                            <Column id="id_uploadcolumn6" minScreenWidth="Tablet" hAlign="Center" demandPopin="true" width="auto">
+                                <Text id="id_textc_6" text="Purchase Order"/>
+                            </Column>
+                            <Column id="id_uploadcolumn7" minScreenWidth="Tablet" hAlign="Center" demandPopin="true" width="auto">
+                                <Text id="id_text_7" text="Purchase order Item"/>
+                            </Column>
+                            <Column id="id_uploadcolumn8" minScreenWidth="Tablet" demandPopin="true" hAlign="Center" width="auto" >
+                                <Text id="id_texts_8" text="GoodsMovementRefDocType" />
+                            </Column>
+                            <Column id="id_uploadcolumn11" minScreenWidth="Tablet"  hAlign="Center" width="auto" >
+                                 <Text id="id_upload_text_11" text="Unit" />
+                            </Column>
+                            <Column id="id_uploadcolumn12" minScreenWidth="Tablet"  hAlign="Center" width="auto" >
+                                <Text id="id_upload_text_12" text="QuantityInEntryUnit" />
+					        </Column>
+                        </columns>
+                        <items>
+                            <ColumnListItem id="id_uploadcolumnlist1" vAlign="Middle" >
+                                <cells>
+                                    <Text id="id_uploadDocumentNo" 	    text="{MaterialUpload>DocumentNo}" />
+                                    <Text id="id_uploadPostingDate"              text="{MaterialUpload>PostingDate}" />
+                                    <Text id="id_uploadGoodsMovementCode"  		    text="{MaterialUpload>GoodsMovementCode}" />
+                                    <Text id="id_uploadMaterial"  		    text="{MaterialUpload>Material}" />
+                                    <Text id="id_uploadPlant"  		    text="{MaterialUpload>Plant}" />
+                                    <Text id="id_uploadStorageLocation"  	    text="{MaterialUpload>StorageLocation}" />
+                                    <Text id="id_uploadGoodsMovementType"     	    text="{MaterialUpload>GoodsMovementType}"  />
+                                    <Text id="id_uploadPurchaseOrder"     text="{MaterialUpload>PurchaseOrder}" />
+                                    <Text id="id_uploadPurchaseOrderItem"  	    text="{MaterialUpload>PurchaseOrderItem}"  />
+                                    <Text id="id_uploadGoodsMovementRefDocType"    	    text="{MaterialUpload>GoodsMovementRefDocType}" />
+                                    <Text id="id_uploadEntryUnit"    	    text="{MaterialUpload>EntryUnit}" />
+                                    <Text id="id_uploadQuantityInEntryUnit"    	text="{MaterialUpload>QuantityInEntryUnit}" />
+                                </cells>
+                            </ColumnListItem>
+				        </items>
+                    </Table>
+            </l:VerticalLayout>
+
+        </content>
+    </Page>
+</mvc:View>
