@@ -30,6 +30,7 @@ sap.ui.define([
     var EdmType = exportLibrary.EdmType;
     return Controller.extend("materialdocument.controller.Upload_Material", {
         onInit() {
+            this._excelStatusMap = [];
         },
         onUpload: function(oEvent){
             var that = this;
@@ -88,39 +89,143 @@ sap.ui.define([
                 reader.readAsBinaryString(file);
             }
         },
-        postMaterial: async function(oEvent){
-            oBusyDialogAdd = new sap.m.BusyDialog({
+        onDownloadResult: function () {
+            const data = this._excelStatusMap || [];
+        
+            if (data.length === 0) {
+                MessageBox.warning("No data available for export.");
+                return;
+            }
+        
+            const oSettings = {
+                workbook: {
+                    columns: this._downloadStatusColumnConfig()
+                },
+                dataSource: data,
+                fileName: 'Material_Upload_Status.xlsx'
+            };
+        
+            const oSheet = new Spreadsheet(oSettings);
+            oSheet.build().finally(() => {
+                oSheet.destroy();
+            });
+        },
+        _downloadStatusColumnConfig: function () {
+            return [
+                { label: 'Document No', type: EdmType.String, property: 'DocumentNo' },
+                { label: 'Posting Date', type: EdmType.String, property: 'PostingDate' },
+                { label: 'Goods Movement Code', type: EdmType.String, property: 'GoodsMovementCode' },
+                { label: 'Material', type: EdmType.String, property: 'Material' },
+                { label: 'Plant', type: EdmType.String, property: 'Plant' },
+                { label: 'Storage Location', type: EdmType.String, property: 'StorageLocation' },
+                { label: 'Goods Movement Type', type: EdmType.String, property: 'GoodsMovementType' },
+                { label: 'Purchase Order', type: EdmType.String, property: 'PurchaseOrder' },
+                { label: 'Purchase Order Item', type: EdmType.String, property: 'PurchaseOrderItem' },
+                { label: 'Goods Movement Ref Doc Type', type: EdmType.String, property: 'GoodsMovementRefDocType' },
+                { label: 'Entry Unit', type: EdmType.String, property: 'EntryUnit' },
+                { label: 'Quantity In Entry Unit', type: EdmType.String, property: 'QuantityInEntryUnit' },
+                { label: 'Status', type: EdmType.String, property: 'Status' }
+            ];
+        },                
+        postMaterial: async function (oEvent) {
+            const oBusyDialogAdd = new sap.m.BusyDialog({
                 title: "Processing.....",
-                text: "Migrating Material Documents.. Please Wait"
+                text: "Migrating Material Documents... Please Wait"
             });
             oBusyDialogAdd.open();
-            var oModel = this.getOwnerComponent().getModel();
-            var that = this;
-            var oTable = this.getView().byId("id_table");
-            var oEntries = oTable.getSelectedItems();
-            var oPayloadEntries = {};
-            oPayloadEntries.to_MaterialDocumentItem = []
-            var Material = {};
-            for( var i = 0; i<oEntries.length; i++ ){
-                //test
-                var oCells = oEntries[i].getCells();
-                oPayloadEntries.PostingDate = oCells[1].getText();
-                oPayloadEntries.GoodsMovementCode = oCells[2].getText();
-                Material.Material = oCells[3].getText();
-                Material.Plant = oCells[4].getText();
-                Material.StorageLocation = oCells[5].getText();
-                Material.GoodsMovementType = oCells[6].getText();
-                Material.PurchaseOrder = oCells[7].getText();
-                Material.PurchaseOrderItem = oCells[8].getText();
-                Material.GoodsMovementRefDocType = oCells[9].getText();
-                Material.EntryUnit = oCells[10].getText();
-                Material.QuantityInEntryUnit = oCells[11].getText();
-                oPayloadEntries.to_MaterialDocumentItem.push(Material);
-                console.log(oPayloadEntries);
-                console.log(JSON.stringify(oPayloadEntries));
+        
+            const oModel = this.getOwnerComponent().getModel();
+            const oTable = this.getView().byId("id_table");
+            const oEntries = oTable.getSelectedItems();
+        
+            if (oEntries.length === 0) {
+                MessageBox.warning("Please select at least one item to post.");
+                oBusyDialogAdd.close();
+                return;
             }
-            if (oPayloadEntries){
-                //var oUrl = this.getBaseURL() + `/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/$metadata`;
+        
+            const groupedPayloads = {};
+        
+            for (let i = 0; i < oEntries.length; i++) {
+                const oCells = oEntries[i].getCells();
+                const docId = oCells[0].getText();
+        
+                if (!groupedPayloads[docId]) {
+                    groupedPayloads[docId] = {
+
+                        PostingDate: oCells[1].getText(),
+                        GoodsMovementCode: oCells[2].getText(),
+                        to_MaterialDocumentItem: []
+                    };
+                }
+        
+                const item = {
+                    Material: oCells[3].getText(),
+                    Plant: oCells[4].getText(),
+                    StorageLocation: oCells[5].getText(),
+                    GoodsMovementType: oCells[6].getText(),
+                    PurchaseOrder: oCells[7].getText(),
+                    PurchaseOrderItem: oCells[8].getText(),
+                    GoodsMovementRefDocType: oCells[9].getText(),
+                    EntryUnit: oCells[10].getText(),
+                    QuantityInEntryUnit: oCells[11].getText()
+                };
+        
+                groupedPayloads[docId].to_MaterialDocumentItem.push(item);
+            }
+        
+            const documentIds = Object.keys(groupedPayloads);
+            console.log(groupedPayloads);
+            this._excelStatusMap = []; 
+            for (const docId of documentIds) {
+                const payload = groupedPayloads[docId];
+                const materialItems = payload.to_MaterialDocumentItem;
+                try {
+                    const response = await this._triggerMaterialDocument(oModel, payload);
+                    const statusMsg = response && response.statusCode === "201"
+                        ? "Success: Material Document No - " + (response.data?.MaterialDocument || docId)
+                        : "Failed: Unknown Error";
+                
+                    // Add status per item
+                    materialItems.forEach(item => {
+                        this._excelStatusMap.push({
+                            DocumentNo: docId,
+                            PostingDate: payload.PostingDate,
+                            GoodsMovementCode: payload.GoodsMovementCode,
+                            ...item,
+                            Status: statusMsg
+                        });
+                    });
+                
+                    if (response && response.statusCode === "201") {
+                        MessageBox.success(statusMsg);
+                    } else {
+                        MessageBox.error("Failed to create Material Document for ID: " + docId);
+                    }
+                } catch (error) {
+                    const errMsg = error?.responseText
+                        ? JSON.parse(error.responseText)?.error?.message?.value
+                        : error.message;
+                
+                    materialItems.forEach(item => {
+                        this._excelStatusMap.push({
+                            DocumentNo: docId,
+                            PostingDate: payload.PostingDate,
+                            GoodsMovementCode: payload.GoodsMovementCode,
+                            ...item,
+                            Status: "Failed: " + errMsg
+                        });
+                    });
+                
+                    MessageBox.error("Error for Document ID " + docId + ": " + errMsg);
+                }
+            }
+            this.byId("logStrip").setVisible(true);
+
+            oBusyDialogAdd.close();
+        }
+        ,
+         //var oUrl = this.getBaseURL() + `/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/$metadata`;
                /* var oSettings = {
                            "url": this.getBaseURL() + `/sap/opu/odata/sap/API_MATERIAL_DOCUMENT_SRV/$metadata`,
                             "method": "GET",
@@ -147,32 +252,6 @@ sap.ui.define([
                /* await that._triggerMaterial(oSettingsURL).then((oResponse) => {
                     console.log(oResponse);
                 }); */
-
-                try {
-                    let response = await that._triggerMaterialDocument(oModel,oPayloadEntries);
-                    if(response){
-                        try {
-                            if (response.statusCode === '201'){
-                                var MessageText = 'Material Document No-' + SucessData.MaterialDocument  + '  ' +  'created successfully' ;
-                                MessageBox.success(MessageText);
-                            }
-                        } catch (error) {
-                            MessageBox.error('Error while creating Material Document');
-                        }
-                        oBusyDialogAdd.close();
-                    }else{
-                        MessageBox.error('Error while creating Material Document');
-                    }
-                } catch (error) {
-                    var errorLog = JSON.parse(error.responseText);
-                    var Message = errorLog.error.message.value;
-                    MessageBox.error(Message);
-                    oBusyDialogAdd.close();
-                }
-                
-                
-            }
-        },
         /*getBaseURL: function () {
             return sap.ui.require.toUrl("materialdocument");
         },*/
