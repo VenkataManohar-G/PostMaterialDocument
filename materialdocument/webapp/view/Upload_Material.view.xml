@@ -44,7 +44,6 @@
     text="To view logs of the upload"
     type="Warning"
     showIcon="true"
-    
     visible="false"
     class="sapUiTinyMarginBottom">
     
