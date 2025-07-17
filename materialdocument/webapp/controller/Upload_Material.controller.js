@@ -34,6 +34,7 @@ sap.ui.define([
         },
         onUpload: function(oEvent){
             var that = this;
+            this.getView().byId('logStrip').setVisible(false);
             that._import(oEvent.getParameter("files") && oEvent.getParameter("files")[0]);
         },
         _import : function(file){
@@ -198,9 +199,9 @@ sap.ui.define([
                     });
                 
                     if (response && response.statusCode === "201") {
-                        MessageBox.success(statusMsg);
+                      //  MessageBox.success(statusMsg);
                     } else {
-                        MessageBox.error("Failed to create Material Document for ID: " + docId);
+                        //MessageBox.error("Failed to create Material Document for ID: " + docId);
                     }
                 } catch (error) {
                     const errMsg = error?.responseText
@@ -217,7 +218,7 @@ sap.ui.define([
                         });
                     });
                 
-                    MessageBox.error("Error for Document ID " + docId + ": " + errMsg);
+                    //MessageBox.error("Error for Document ID " + docId + ": " + errMsg);
                 }
             }
             this.byId("logStrip").setVisible(true);
